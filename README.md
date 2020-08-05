@@ -1,7 +1,7 @@
 # Hi 👋
 
 ### Contact me :speech_balloon:
-<a href="tg://resolve?domain=uaudith">
+<a href="https://t.me/uaudith">
   <img align="left" alt="Udith Amasura | Telegram" width="20px" src="https://telegram.org/img/t_logo.svg?1" />
 </a>
 
