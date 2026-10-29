@@ -4,6 +4,10 @@ from pyrogram import Client, filters
 BOT_TOKEN = ""
 API_ID = ""
 API_HASH = ""
+chnl = ""
+
+with open("merged_instagram_links.txt", "r", encoding="utf-8") as file:
+    links = [line.strip() for line in file if line.strip()]
 
 Bot = Client(
     "instaBot",
@@ -17,7 +21,10 @@ Bot = Client(
 @Bot.on_message(filters.command(["start"]))
 async def start(bot, m):
     await m.reply("started")
-
+    for index, link in enumerate(links, start=1):
+        
+        await bot.send_video(chat_id=chnl, video=file_dl_path, caption=m.caption)
+        os.remove(file_dl_path)
 
 
 @Bot.on_message(filters.private & (filters.video | filters.document))
@@ -40,6 +47,7 @@ async def thumb_change(bot, m):
         await bot.send_document(chat_id=m.chat.id, document=file_dl_path, thumb=thumb, caption=m.caption if m.caption else None, progress=progress_for_pyrogram, progress_args=("Uploading file..", msg, c_time))
     elif m.video:
         await bot.send_video(chat_id=m.chat.id, video=file_dl_path, thumb=thumb, caption=m.caption if m.caption else None, progress=progress_for_pyrogram, progress_args=("Uploading file..", msg, c_time))
+        
     await msg.delete()
     os.remove(file_dl_path)
 
