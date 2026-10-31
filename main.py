@@ -32,7 +32,7 @@ ydl_opts = {
     'quiet': True,
     'no_warnings': True,
 
-    'sleep-requests': 2,
+    'sleep_interval_requests': 2,
     'sleep_interval': 4,
     'max_sleep_interval': 10,
     'retries': 10,
