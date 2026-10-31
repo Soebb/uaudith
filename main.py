@@ -1,14 +1,10 @@
-import os, time
+import os
+import yt_dlp
 from pyrogram import Client, filters
 
 BOT_TOKEN = ""
 API_ID = ""
 API_HASH = ""
-chnl = ""
-
-with open("merged_instagram_links.txt", "r", encoding="utf-8") as file:
-    links = [line.strip() for line in file if line.strip()]
-
 Bot = Client(
     "instaBot",
     bot_token = BOT_TOKEN,
@@ -16,41 +12,53 @@ Bot = Client(
     api_hash = API_HASH
 )
 
+INPUT_FILE = "merged_instagram_links.txt"
+with open(INPUT_FILE, "r", encoding="utf-8") as file:
+    links = [line.strip() for line in file if line.strip()]
+    
+DOWNLOAD_DIR = "downloads"
+os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
+ydl_opts = {
+    'outtmpl': os.path.join(DOWNLOAD_DIR, '%(id)s.%(ext)s'),
+
+    'format': 'best[height<=240]/best',
+
+    'noplaylist': True,
+    'download_archive': "archive.txt",
+
+    'quiet': True,
+    'no_warnings': True,
+}
+
+chnl = ""
 
 @Bot.on_message(filters.command(["start"]))
 async def start(bot, m):
     await m.reply("started")
-    for index, link in enumerate(links, start=1):
-        
-        await bot.send_video(chat_id=chnl, video=file_dl_path, caption=m.caption)
-        os.remove(file_dl_path)
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        for index, link in enumerate(links, start=1):
+            try:
+                info = ydl.extract_info(link, download=True)
 
+                if info is None:
+                    print("Download failed or unavailable.")
+                    continue
+                if 'entries' in info:
+                    entries = info['entries']
+                else:
+                    entries = [info]
 
-@Bot.on_message(filters.private & (filters.video | filters.document))
-async def thumb_change(bot, m):
-    global thumb
-    msg = await m.reply("`Downloading..`")
-    c_time = time.time()
-    file_dl_path = await bot.download_media(message=m, progress=progress_for_pyrogram, progress_args=("Downloading file..", msg, c_time))
-    await msg.delete()
-    answer = await bot.ask(m.chat.id,'Now send the thumbnail' + ' or /keep to keep the previous thumb' if thumb else '', filters=filters.photo | filters.text)
-    if answer.photo:
-        try:
-            os.remove(thumb)
-        except:
-            pass
-        thumb = await bot.download_media(message=answer.photo)
-    msg = await m.reply("`Uploading..`")
-    c_time = time.time()
-    if m.document:
-        await bot.send_document(chat_id=m.chat.id, document=file_dl_path, thumb=thumb, caption=m.caption if m.caption else None, progress=progress_for_pyrogram, progress_args=("Uploading file..", msg, c_time))
-    elif m.video:
-        await bot.send_video(chat_id=m.chat.id, video=file_dl_path, thumb=thumb, caption=m.caption if m.caption else None, progress=progress_for_pyrogram, progress_args=("Uploading file..", msg, c_time))
-        
-    await msg.delete()
-    os.remove(file_dl_path)
+                for video in entries:
+                    if video is None:
+                        continue
+                    title = video.get('title', 'Unknown')
 
-
+                
+                await bot.send_video(chat_id=chnl, video=file_dl_path, caption=m.caption)
+                os.remove(file_dl_path)
+            except Exception as error:
+                print(f"Error: {error}")
+                continue
 
 Bot.run()
